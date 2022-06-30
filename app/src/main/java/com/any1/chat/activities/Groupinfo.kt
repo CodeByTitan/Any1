@@ -35,7 +35,14 @@ import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mikhaellopez.circularimageview.CircularImageView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.launch
+import java.lang.reflect.Member
 import java.util.*
+import kotlin.collections.ArrayList
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.coroutineContext
 
 
 class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener,OnConnectClickListener, RequestRemovedListener{
@@ -44,6 +51,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private lateinit var gcname :  EditText
     private lateinit var edittags: ImageView
     private lateinit var tagrecyclerview: RecyclerView
+    private val sortedMemberList = ArrayList<MemberModel>()
     private lateinit var memberRecyclerView: RecyclerView
     private lateinit var requestsRecyclerView: RecyclerView
     private lateinit var requestAdapter : RequestAdapter
@@ -53,6 +61,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private lateinit var videocall: SwitchMaterial
     private lateinit var approval: SwitchMaterial
     private lateinit var rankupdates: CheckBox
+    private lateinit var currentUserMemberModel : MemberModel
     private lateinit var tagadapter: SearchTagsAdapter
     private lateinit var memberAdapter: MembersAdapter
     private lateinit var addmembers: TextView
@@ -72,6 +81,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private lateinit var groupInfoViewModel : GroupInfoViewModel
     private var nosimpingbool : Boolean = false
     private var videocallbool : Boolean = false
+    private lateinit var sharedPreferences: SharedPreferences
 
     override fun onCreate(savedInstanceState: Bundle?) {
         val themepreferences = getSharedPreferences(packageName+"theme", MODE_PRIVATE)
@@ -86,6 +96,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
             tagPreferences.edit().clear().apply()
         }
         setContentView(R.layout.activity_groupinfo)
+        sharedPreferences = getSharedPreferences(packageName + "user", MODE_PRIVATE)
         gcname = findViewById(R.id.groupname)
         edittags = findViewById(R.id.edittags)
         val changephoto = findViewById<TextView>(R.id.changegroupphoto)
@@ -315,6 +326,9 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
                 addtogroup.visibility = View.VISIBLE
                 requestAdapter.setRequestList(it)
                 requestsRecyclerView.adapter = requestAdapter
+                for(i in it){
+                    requestList.add(i.id)
+                }
             }
         }
 
@@ -322,7 +336,23 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
 
 
         addtogroup.setOnClickListener {
-
+            val arrayList = requestAdapter.getUserIdOfCheckedRequests()
+            for(i in arrayList){
+                if(memberList.isNotEmpty()){
+                    memberList.add(i)
+                    firestore.collection("groups").document(gctag).update("members",memberList).addOnSuccessListener {
+                        memberAdapter.notifyDataSetChanged()
+                        Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
+                        if(requestList.isNotEmpty()){
+                            requestList.remove(i)
+                            firestore.collection("groups").document(gctag).update("requests",requestList).addOnSuccessListener {
+                                requestAdapter.notifyDataSetChanged()
+                                requestAdapter.notifychange()
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         gcname.addTextChangedListener(
@@ -387,13 +417,36 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         memberRecyclerView.layoutManager = LinearLayoutManager(this)
         memberAdapter = MembersAdapter(this,this,this,this)
         membersViewModel.getMembers(gctag)
+
         membersViewModel.liveData.observe(this){
-            memberAdapter.setMembersList(it)
+            CoroutineScope(Default).launch {
+                sortedMemberList.clear()
+                sortedMemberList.addAll(getSortedMemberList(it))
+            }
+            if(sortedMemberList.isNotEmpty()){
+                memberAdapter.setMembersList(sortedMemberList)
+            }else{
+                memberAdapter.setMembersList(it)
+            }
             memberRecyclerView.adapter = memberAdapter
         }
-
     }
 
+    private suspend fun getSortedMemberList(it : ArrayList<MemberModel>):ArrayList<MemberModel>{
+        val suspendModel = getCurrentUserMemberModel(it)
+        it.remove(currentUserMemberModel)
+        it.add(0,currentUserMemberModel)
+        return it
+    }
+
+    private suspend fun getCurrentUserMemberModel(it : ArrayList<MemberModel>): MemberModel{
+        for(i in it){
+            if(i.memberusername == sharedPreferences.getString("username","")){
+                currentUserMemberModel = i
+            }
+        }
+        return currentUserMemberModel
+    }
     override fun onStop() {
         groupInfoViewModel.stopListening()
         super.onStop()
@@ -447,7 +500,6 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     }
 
     override fun onMenuClicked(position: Int, memberModeList: ArrayList<MemberModel>) {
-        TODO("Not yet implemented")
     }
 
     override fun onRequestRemoved() {

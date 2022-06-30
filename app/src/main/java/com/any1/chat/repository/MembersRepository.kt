@@ -35,15 +35,16 @@ class MembersRepository(val memberListListener : MemberListListener, val request
                 if(value.get("members")!=null && value.get("admins")!=null){
                     membersList.addAll(value.get("members") as ArrayList<String>)
                     adminList.addAll(value.get("admins") as ArrayList<String>)
-                    isAdmin = auth.currentUser!!.uid in adminList
                     for(i in membersList){
                         firestore.collection("users").document(i).get().addOnSuccessListener {
                             membername = it.getString("displayname").toString()
                             username = it.getString("username").toString()
                             uri = it.getString("imageurl").toString()
                             firestore.collection("users").document(auth.currentUser!!.uid).collection("connections").document(i).get().addOnSuccessListener {
-                                isConnected = true
+                                userdoc ->
+                                isConnected = userdoc.exists()
                             }.addOnFailureListener{isConnected = false}
+                            isAdmin = adminList.contains(i)
                             model = MemberModel(membername,username,uri,isConnected,isAdmin)
                             membersArrayList.add(model)
                             val filteredList = membersArrayList.distinct()

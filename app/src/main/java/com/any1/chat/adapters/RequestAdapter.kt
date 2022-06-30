@@ -27,6 +27,7 @@ import com.mikhaellopez.circularimageview.CircularImageView
 class RequestAdapter(val context : Context, val onRequestClickListener: OnRequestClickListener, val string: String, val requestRemovedListener: RequestRemovedListener) : RecyclerView.Adapter<RequestAdapter.RequestHolder>() {
 
     private lateinit var requestList: ArrayList<RequestModel>
+    private val userIdList = ArrayList<String>()
 
     inner class RequestHolder(itemView : View) : RecyclerView.ViewHolder(itemView){
         val name : TextView = itemView.findViewById(R.id.membername)
@@ -66,6 +67,13 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
         }
     }
 
+    fun notifychange(){
+        notifyDataSetChanged()
+    }
+    fun getUserIdOfCheckedRequests(): ArrayList<String>{
+        return userIdList
+    }
+
     fun setRequestList(arrayList: ArrayList<RequestModel>){
         requestList= arrayList
     }
@@ -93,13 +101,23 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
             }
         }
         holder.username.text = requestList[position].username
+        holder.checkbox.isChecked = requestList[position].isChecked
+        if(holder.checkbox.isChecked){
+            userIdList.add(requestList[position].id)
+        }
         holder.checkbox.setOnClickListener {
             if(requestList[position].isChecked){
                 requestList[position].isChecked = false
                 holder.checkbox.isChecked = false
+                if(!userIdList.contains(requestList[position].id)){
+                    userIdList.add(requestList[position].id)
+                }
             }else{
                 requestList[position].isChecked = true
                 holder.checkbox.isChecked = true
+                if(userIdList.contains(requestList[position].id)){
+                    userIdList.remove(requestList[position].id)
+                }
             }
         }
     }

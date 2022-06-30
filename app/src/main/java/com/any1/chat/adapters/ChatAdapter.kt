@@ -4,10 +4,7 @@ import android.content.Context
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.RelativeLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.emoji.widget.EmojiTextView
 import androidx.recyclerview.widget.RecyclerView
@@ -71,7 +68,15 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
         }
 
         override fun bindUri(uri: String) {
-            Glide.with(context).load(uri).circleCrop().into(imageView)
+            if(uri!="male"){
+                if(uri!="female"){
+                    Glide.with(context).load(uri).circleCrop().into(imageView)
+                }else{
+                    imageView.setImageDrawable(AppCompatResources.getDrawable(context,R.drawable.doomergirl))
+                }
+            }else{
+                imageView.setImageDrawable(AppCompatResources.getDrawable(context,R.drawable.gigachad))
+            }
         }
     }
 
@@ -149,7 +154,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
 
     override fun onBindViewHolder(holder: BaseViewHolder, position: Int) {
         holder.bind(chatModelList[position].item)
-        if(getItemViewType(position)==MESSAGE_RIGHT){
+        if(getItemViewType(position)==MESSAGE_LEFT){
            holder.bindUri(chatModelList[position].senderpfpuri)
         }
 

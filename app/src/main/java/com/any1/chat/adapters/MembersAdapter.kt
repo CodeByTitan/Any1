@@ -68,6 +68,7 @@ class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberC
     fun clearList(){
         membersArrayList.clear()
     }
+
     override fun onBindViewHolder(holder: MessageHolder, position: Int) {
         holder.membername.text = membersArrayList[position].membername
         holder.memberusername.text = membersArrayList[position].memberusername

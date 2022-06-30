@@ -31,7 +31,6 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
                         firestore.collection("groups").document(grouptag).collection("messages").document(doc).collection("messages").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener{
                             value,error ->
                             if(value!=null) {
-                                messageList.clear()
                                 for (document in value.documents) {
                                     val senderid = document.getString("sender").toString()
                                     val message = document.getString("message").toString()
