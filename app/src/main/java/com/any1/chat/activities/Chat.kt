@@ -178,24 +178,23 @@ class Chat : AppCompatActivity() , BasicClickListener{
             }
         }
         send.setOnClickListener{
-            sendMessage(str)
+            sendMessage(str.trim())
             editText.setText("")
             str = ""
         }
         backbutton.setOnClickListener {
           slideleft()
         }
-        CoroutineScope(IO).launch {
-            viewModel = ViewModelProvider(this@Chat).get(ChatViewModel::class.java)
-            viewModel.getMessages(gctag)
-            viewModel.getGroupMessages.observe(this@Chat){
-                if (it != null) {
-                    adapter.setChatModelList(it)
-                    recyclerView.adapter = adapter
+        viewModel = ViewModelProvider(this@Chat).get(ChatViewModel::class.java)
+        viewModel.getMessages(gctag)
+        viewModel.getGroupMessages.observe(this){
+            if (it != null) {
+                adapter.clearChatModelList()
+                adapter.setChatModelList(it)
+                recyclerView.adapter = adapter
 //                recyclerView.scrollToPosition(it.size)
 //                smoothScroller.targetPosition = it.size
 //                recyclerView.layoutManager!!.startSmoothScroll(smoothScroller)
-                }
             }
         }
     }
@@ -376,7 +375,6 @@ class Chat : AppCompatActivity() , BasicClickListener{
                 ) {
                     p1!!.continuePermissionRequest()
                 }
-
             }
         ).check()
     }

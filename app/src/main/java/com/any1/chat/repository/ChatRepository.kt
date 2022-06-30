@@ -2,6 +2,7 @@ package com.any1.chat.repository
 
 import android.util.Log
 import android.widget.Toast
+import com.any1.chat.activities.Chat
 import com.any1.chat.interfaces.MessageReceiveListener
 import com.any1.chat.models.ChatModel
 import com.google.firebase.auth.FirebaseAuth
@@ -20,8 +21,9 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
     private var listWithoutDotsStr = ArrayList<String>()
     private lateinit var sortedList : List<String>
     private lateinit var finalList : List<String>
+    private val messageListForADay = ArrayList<ChatModel>()
 
-    fun getMessages(grouptag: String) {
+    suspend fun getMessages(grouptag: String) {
         firestore.collection("groups").document(grouptag).collection("messages").orderBy("timestamp",Query.Direction.DESCENDING)
             .addSnapshotListener { value, error ->
                 if (value != null) {
@@ -36,7 +38,7 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
                                     val message = document.getString("message").toString()
                                     val senderpfpurl = document.getString("senderpfpuri").toString()
                                     val model = ChatModel(message, document.id, senderid, senderpfpurl)
-                                    messageList.add(model)
+                                    messageList.add(messageList.size,model)
                                     messageReceiveListener.OnMessageReceived(messageList)
                                 }
                             }

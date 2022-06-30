@@ -9,8 +9,10 @@
     <color name="lightgray">#3d3d39</color>
     <color name="samelightgray">#dcdfe3</color>
     <color name="greywhite">#FFFFFF</color>
+    <color name="blueindarkblack">#1778F2</color>
     <color name="grayindark">#292b2e</color>
     <color name= "sameblack">#FF000000</color>
+    <color name="whiteindarkblue">#FFFFFF</color>
     <color name="whitegrey">#D3D3D3</color>
     <color name="grey">#899190</color>
     <color name="grayasl">#ffffffff</color>

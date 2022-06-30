@@ -48,12 +48,15 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
     }
 
     val MESSAGE_LEFT = 1 // FOR FRIEND LAYOUT
-    private lateinit var chatModelList:ArrayList<ChatModel>
+    private val chatModelList = ArrayList<ChatModel>()
 
     fun setChatModelList(messageModelList: ArrayList<ChatModel>) {
-        chatModelList = messageModelList
+        chatModelList.addAll(messageModelList)
     }
 
+    fun clearChatModelList(){
+        chatModelList.clear()
+    }
     inner class ChatLeftHolder(itemView: View): BaseViewHolder(itemView){
         val textView: EmojiTextView = itemView.findViewById(R.id.showemojimessage)
         val imageView : ImageView = itemView.findViewById(R.id.senderpfp)
@@ -101,6 +104,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
         emojiTextView.textSize = 15f
         if(chatModelList[position].sender == auth.currentUser!!.uid){
             if(position!=0){
+                emojiTextView.setPadding(40,40,30,40)
                 if(position== chatModelList.size-1){
                     emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightfirstmsg)
                 }else{
@@ -115,6 +119,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                     }
                 }
             }else{
+                emojiTextView.setPadding(40,40,30,40)
                 val linearParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -128,6 +133,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
             }
         }else{
             if (position != 0) {
+                emojiTextView.setPadding(30,40,40,40)
                 if (position == chatModelList.size - 1) {
                     emojiTextView.background = AppCompatResources.getDrawable(
                         context,
@@ -153,6 +159,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                     }
                 }
             } else {
+                emojiTextView.setPadding(30,40,40,40)
                 val linearParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -170,8 +177,6 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
         }
     }
     inner class ChatRightHolder(itemView: View) : BaseViewHolder(itemView){
-//        val textView : TextView = itemView.findViewById(R.id.showmessage)
-//        val cardView : MaterialCardView = itemView.findViewById(R.id.sendercardview)
         val emojiTextView : EmojiTextView = itemView.findViewById(R.id.showemojimessage)
         val relativeLayout : RelativeLayout = itemView.findViewById(R.id.relativeright)
         override fun bind(item: String) {
