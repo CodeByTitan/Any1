@@ -1,0 +1,111 @@
+package com.any1.chat.adapters
+
+import android.app.Dialog
+import android.content.Context
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
+import android.view.Window
+import android.widget.CheckBox
+import android.widget.ImageView
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.content.res.AppCompatResources
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
+import com.any1.chat.R
+import com.any1.chat.interfaces.*
+import com.any1.chat.models.RequestModel
+import com.bumptech.glide.Glide
+import com.google.android.material.button.MaterialButton
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
+import com.mikhaellopez.circularimageview.CircularImageView
+
+class RequestAdapter(val context : Context, val onRequestClickListener: OnRequestClickListener, val string: String, val requestRemovedListener: RequestRemovedListener) : RecyclerView.Adapter<RequestAdapter.RequestHolder>() {
+
+    private lateinit var requestList: ArrayList<RequestModel>
+
+    inner class RequestHolder(itemView : View) : RecyclerView.ViewHolder(itemView){
+        val name : TextView = itemView.findViewById(R.id.membername)
+        val username : TextView = itemView.findViewById(R.id.memberusername)
+        val x : ImageView = itemView.findViewById(R.id.removerequestimage)
+        val checkbox : CheckBox = itemView.findViewById(R.id.requestcheckbox)
+        val imageView : ImageView = itemView.findViewById(R.id.memberpfp)
+        init {
+            x.setOnClickListener {
+                val dialog = Dialog(context)
+                dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+                dialog.setContentView(R.layout.removerequest)
+                dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+                val removeRequest = dialog.findViewById<TextView>(R.id.removerequest)
+                val cancel = dialog.findViewById<TextView>(R.id.requestcancel)
+                val requesttext = dialog.findViewById<TextView>(R.id.removerequesttext)
+                requesttext.text = context.getString(R.string.removerequest,requestList[adapterPosition].name)
+                removeRequest.setOnClickListener {
+                    val arrayList = ArrayList<String>()
+                    for(i in requestList){
+                        arrayList.add(i.id)
+                    }
+                    arrayList.remove(requestList[adapterPosition].id)
+                    FirebaseFirestore.getInstance().collection("groups").document(string).update("requests",arrayList).addOnSuccessListener {
+                        notifyDataSetChanged()
+                        dialog.dismiss()
+                        if(requestList.size==0){
+                            requestRemovedListener.onRequestRemoved()
+                        }
+                    }
+                }
+                cancel.setOnClickListener {
+                    dialog.dismiss()
+                }
+                dialog.show()
+            }
+        }
+    }
+
+    fun setRequestList(arrayList: ArrayList<RequestModel>){
+        requestList= arrayList
+    }
+
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RequestHolder {
+        val context = parent.context
+        val inflater = LayoutInflater.from(context)
+        val view = inflater.inflate(R.layout.requestsinglerow,parent,false)
+        return RequestHolder(view)
+    }
+
+    override fun onBindViewHolder(holder: RequestHolder, position: Int) {
+        holder.name.text = requestList[position].name
+        when (requestList[position].uri) {
+            "male" -> {
+                val drawable = AppCompatResources.getDrawable(context,R.drawable.gigachad)
+                holder.imageView.setImageDrawable(drawable)
+            }
+            "female" -> {
+                val drawable = AppCompatResources.getDrawable(context,R.drawable.doomergirl)
+                holder.imageView.setImageDrawable(drawable)
+            }
+            else -> {
+                Glide.with(context).load(requestList[position].uri).circleCrop().into(holder.imageView)
+            }
+        }
+        holder.username.text = requestList[position].username
+        holder.checkbox.setOnClickListener {
+            if(requestList[position].isChecked){
+                requestList[position].isChecked = false
+                holder.checkbox.isChecked = false
+            }else{
+                requestList[position].isChecked = true
+                holder.checkbox.isChecked = true
+            }
+        }
+    }
+
+    override fun getItemCount(): Int {
+        return requestList.size
+    }
+
+}
