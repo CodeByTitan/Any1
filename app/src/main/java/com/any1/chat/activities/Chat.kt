@@ -44,6 +44,9 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import com.mikhaellopez.circularimageview.CircularImageView
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.launch
 import java.io.File
 import java.io.IOException
 import java.lang.StringBuilder
@@ -182,15 +185,17 @@ class Chat : AppCompatActivity() , BasicClickListener{
         backbutton.setOnClickListener {
           slideleft()
         }
-        viewModel = ViewModelProvider(this).get(ChatViewModel::class.java)
-        viewModel.getMessages(gctag)
-        viewModel.getGroupMessages.observe(this){
-            if (it != null) {
-                adapter.setChatModelList(it)
-                recyclerView.adapter = adapter
+        CoroutineScope(IO).launch {
+            viewModel = ViewModelProvider(this@Chat).get(ChatViewModel::class.java)
+            viewModel.getMessages(gctag)
+            viewModel.getGroupMessages.observe(this@Chat){
+                if (it != null) {
+                    adapter.setChatModelList(it)
+                    recyclerView.adapter = adapter
 //                recyclerView.scrollToPosition(it.size)
 //                smoothScroller.targetPosition = it.size
 //                recyclerView.layoutManager!!.startSmoothScroll(smoothScroller)
+                }
             }
         }
     }

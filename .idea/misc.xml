@@ -29,6 +29,8 @@
         <entry key="app/src/main/res/drawable/bnavprofile.xml" value="0.222" />
         <entry key="app/src/main/res/drawable/bottomnavbg.xml" value="0.2225" />
         <entry key="app/src/main/res/drawable/bottomnavicon.xml" value="0.222" />
+        <entry key="app/src/main/res/drawable/chatleftfirstmessage.xml" value="0.2315" />
+        <entry key="app/src/main/res/drawable/chatleftlastmessage.xml" value="0.2315" />
         <entry key="app/src/main/res/drawable/checked.xml" value="0.2225" />
         <entry key="app/src/main/res/drawable/color_cursor.xml" value="0.2225" />
         <entry key="app/src/main/res/drawable/custom_checkbox.xml" value="0.2225" />

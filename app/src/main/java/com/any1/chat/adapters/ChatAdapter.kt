@@ -55,8 +55,9 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
     }
 
     inner class ChatLeftHolder(itemView: View): BaseViewHolder(itemView){
-        val textView: TextView = itemView.findViewById(R.id.showmessage)
+        val textView: EmojiTextView = itemView.findViewById(R.id.showemojimessage)
         val imageView : ImageView = itemView.findViewById(R.id.senderpfp)
+        val relativeLayout : RelativeLayout = itemView.findViewById(R.id.relativeleft)
         init {
             imageView.setOnClickListener {
                 basicClickListener.onClick()
@@ -65,6 +66,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
 
         override fun bind(item: String) {
             textView.text = item
+            assignMessageBackground(item,textView,adapterPosition,relativeLayout)
         }
 
         override fun bindUri(uri: String) {
@@ -104,11 +106,11 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                 }else{
                     if((chatModelList[position-1].sender == auth.currentUser!!.uid)&& (chatModelList[position+1].sender==auth.currentUser!!.uid)){
                         emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundright)
-                    }else if(chatModelList[position-1].sender != auth.currentUser!!.uid && chatModelList[position+1].sender == auth.currentUser!!.uid){
+                    }else if(chatModelList[position+1].sender != auth.currentUser!!.uid && chatModelList[position-1].sender == auth.currentUser!!.uid){
                         emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightfirstmsg)
-                    }else if(chatModelList[position+1].sender!=auth.currentUser!!.uid && chatModelList[position-1].sender == auth.currentUser!!.uid){
+                    }else if(chatModelList[position-1].sender!=auth.currentUser!!.uid && chatModelList[position+1].sender == auth.currentUser!!.uid){
                         emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightlastmessage)
-                    }else if((chatModelList[position+1].sender!=auth.currentUser!!.uid)&& (chatModelList[position-1].sender!=auth.currentUser!!.uid)){
+                    }else if((chatModelList[position-1].sender!=auth.currentUser!!.uid)&& (chatModelList[position+1].sender!=auth.currentUser!!.uid)){
                         emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundright)
                     }
                 }
@@ -123,6 +125,47 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                 relativeLayout.layoutParams = linearParams
                 relativeLayout.requestLayout()
                 emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightlastmessage)
+            }
+        }else{
+            if (position != 0) {
+                if (position == chatModelList.size - 1) {
+                    emojiTextView.background = AppCompatResources.getDrawable(
+                        context,
+                        R.drawable.chatleftfirstmessage
+                    )
+                } else {
+                    if ((chatModelList[position + 1].sender == chatModelList[position].sender) && (chatModelList[position - 1].sender == chatModelList[position].sender)) {
+                        emojiTextView.background =
+                            AppCompatResources.getDrawable(context, R.drawable.backgroundleft)
+                    } else if (chatModelList[position + 1].sender != chatModelList[position].sender  && chatModelList[position - 1].sender == chatModelList[position].sender) {
+                        emojiTextView.background = AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.chatleftfirstmessage
+                        )
+                    } else if (chatModelList[position - 1].sender != chatModelList[position].sender && chatModelList[position + 1].sender == chatModelList[position].sender) {
+                        emojiTextView.background = AppCompatResources.getDrawable(
+                            context,
+                            R.drawable.chatleftlastmessage
+                        )
+                    } else if ((chatModelList[position - 1].sender !=chatModelList[position].sender) && (chatModelList[position + 1].sender != chatModelList[position].sender)) {
+                        emojiTextView.background =
+                            AppCompatResources.getDrawable(context, R.drawable.backgroundleft)
+                    }
+                }
+            } else {
+                val linearParams = LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams(
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                    )
+                )
+                linearParams.setMargins(15, 2, 0, 10)
+                relativeLayout.layoutParams = linearParams
+                relativeLayout.requestLayout()
+                emojiTextView.background = AppCompatResources.getDrawable(
+                    context,
+                    R.drawable.chatleftlastmessage
+                )
             }
         }
     }
