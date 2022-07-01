@@ -36,7 +36,6 @@ import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
-import com.google.firebase.firestore.Query
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.PermissionToken
 import com.karumi.dexter.listener.PermissionDeniedResponse
@@ -44,16 +43,18 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import com.mikhaellopez.circularimageview.CircularImageView
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.IO
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
 import java.io.IOException
+import java.lang.Runnable
 import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
+import kotlin.system.measureTimeMillis
 
 
 // TODO: Rename parameter arguments, choose names that match
@@ -72,7 +73,7 @@ class Chat : AppCompatActivity() , BasicClickListener{
     private var param2: String? = null
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: ChatAdapter
-    private lateinit var temporaryMessageList : List<ChatModel>
+    private var temporaryMessageList = ArrayList<ChatModel>()
     private var mediaRecorder : MediaRecorder? = null
     private lateinit var gcpic: CircularImageView
     private lateinit var videocall: ImageView
@@ -190,13 +191,70 @@ class Chat : AppCompatActivity() , BasicClickListener{
         viewModel.getGroupMessages.observe(this){
             if (it != null) {
                 adapter.clearChatModelList()
-                adapter.setChatModelList(it)
+//                CoroutineScope(Default).launch {
+//                    temporaryMessageList = getMessageList(it)
+//                }
+
+//                CoroutineScope(Default).launch {
+//                   val temporaryMessageList = async { getMessageList(it) }
+//                    adapter.setChatModelList(temporaryMessageList.await())
+//                    recyclerView.adapter = adapter
+//                }
+//                val time = measureTimeMillis {
+//                    CoroutineScope(Default).launch {
+//                        temporaryMessageList = getMessageList(it)
+////                    withContext(Main){
+////                        adapter.setChatModelList(temporaryMessageList)
+////                        recyclerView.adapter = adapter
+////                    }
+//                        adapter.setChatModelList(temporaryMessageList)
+//                        recyclerView.adapter = adapter
+//                    }
+//                }
+//                CoroutineScope(Default).launch {
+//                    temporaryMessageList = getMessageList(it)
+////                    withContext(Main){
+////                        adapter.setChatModelList(temporaryMessageList)
+////                        recyclerView.adapter = adapter
+////                    }
+//                }
+
+//                temporaryMessageList = getMessageList(it)
+                val list = ArrayList<ChatModel>()
+                Log.d("this",it.toString())
+                for(i in it){
+                    if (i != null) {
+                        Log.d("this",i.toString())
+                        for(j in i){
+                            list.add(j)
+                        }
+                    }
+                }
+                adapter.setChatModelList(list)
                 recyclerView.adapter = adapter
+//                Log.d("main", time.toString())
 //                recyclerView.scrollToPosition(it.size)
 //                smoothScroller.targetPosition = it.size
 //                recyclerView.layoutManager!!.startSmoothScroll(smoothScroller)
             }
         }
+    }
+
+    private suspend fun getMessageList(arrayList: ArrayList<ArrayList<ChatModel>?>?):ArrayList<ChatModel>{
+        val list = ArrayList<ChatModel>()
+        if (arrayList != null) {
+            for(i in arrayList){
+                if (i != null) {
+                    for(j in i){
+                        list.add(j)
+                    }
+                }
+            }
+        }
+//        val finallist = ArrayList<ChatModel>()
+//        finallist.clear()
+//        finallist.addAll(list)
+        return list
     }
 
     private fun sortMessagesByTime(arrayList: ArrayList<ChatModel>): List<ChatModel> {

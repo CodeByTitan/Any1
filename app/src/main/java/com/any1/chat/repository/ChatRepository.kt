@@ -17,7 +17,7 @@ import kotlin.collections.ArrayList
 class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
     private val firestore = FirebaseFirestore.getInstance()
     private val auth = FirebaseAuth.getInstance()
-    private val messageList: ArrayList<ChatModel> = ArrayList()
+    private val messageList: ArrayList<ArrayList<ChatModel>?> = ArrayList()
     private var listWithoutDotsStr = ArrayList<String>()
     private lateinit var sortedList : List<String>
     private lateinit var finalList : List<String>
@@ -25,10 +25,11 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
 
     suspend fun getMessages(grouptag: String) {
         firestore.collection("groups").document(grouptag).collection("messages").orderBy("timestamp",Query.Direction.DESCENDING)
-            .addSnapshotListener { value, error ->
-                if (value != null) {
+            .addSnapshotListener { value1, error ->
+                if (value1 != null) {
                     messageList.clear()
-                    for (i in value.documents) {
+                    for (i in value1.documents) {
+                        messageListForADay.clear()
                         val doc = i.id
                         firestore.collection("groups").document(grouptag).collection("messages").document(doc).collection("messages").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener{
                             value,error ->
@@ -38,11 +39,19 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
                                     val message = document.getString("message").toString()
                                     val senderpfpurl = document.getString("senderpfpuri").toString()
                                     val model = ChatModel(message, document.id, senderid, senderpfpurl)
-                                    messageList.add(messageList.size,model)
-                                    messageReceiveListener.OnMessageReceived(messageList)
+                                    messageListForADay.add(model)
                                 }
+//                                if(i == value1.documents[0]){
+//                                    if(messageList.size!=0){
+//                                        messageList.removeAt(0)
+//                                        messageList.add(messageListForADay)
+//                                    }
+//                                }
+
                             }
                         }
+                        messageList.add(messageListForADay)
+                        messageReceiveListener.OnMessageReceived(messageList)
                     }
                 }
             }

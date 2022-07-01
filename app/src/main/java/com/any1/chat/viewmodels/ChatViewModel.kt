@@ -11,8 +11,8 @@ import kotlinx.coroutines.launch
 
 
 class ChatViewModel: ViewModel(),MessageReceiveListener{
-    private val mutableLiveData: MutableLiveData<ArrayList<ChatModel>?> = MutableLiveData<ArrayList<ChatModel>?>()
-    var getGroupMessages : LiveData<ArrayList<ChatModel>?> = mutableLiveData
+    private val mutableLiveData: MutableLiveData<ArrayList<ArrayList<ChatModel>?>?> = MutableLiveData<ArrayList<ArrayList<ChatModel>?>?>()
+    var getGroupMessages : MutableLiveData<ArrayList<ArrayList<ChatModel>?>?> = mutableLiveData
     val chatRepository = ChatRepository(this)
 
     fun getMessages(grouptag : String){
@@ -21,8 +21,8 @@ class ChatViewModel: ViewModel(),MessageReceiveListener{
         }
     }
 
-    override fun OnMessageReceived(messageModels: ArrayList<ChatModel>) {
-        mutableLiveData.value = messageModels
+    override fun OnMessageReceived(messageModels: ArrayList<ArrayList<ChatModel>?>) {
+        mutableLiveData.postValue(messageModels)
     }
 
     fun stopReceiveingMessages() {
