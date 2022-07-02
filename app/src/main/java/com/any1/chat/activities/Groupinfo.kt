@@ -9,6 +9,8 @@ import android.graphics.drawable.ColorDrawable
 import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
+import android.util.Log
+import android.view.Gravity
 import android.view.View
 import android.view.Window
 import android.widget.*
@@ -31,10 +33,14 @@ import com.any1.chat.models.RequestModel
 import com.any1.chat.viewmodels.GroupInfoViewModel
 import com.any1.chat.viewmodels.MembersViewModel
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.switchmaterial.SwitchMaterial
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.mikhaellopez.circularimageview.CircularImageView
+import kotlinx.android.synthetic.main.activity_login.*
+import kotlinx.android.synthetic.main.fragment_profile.*
+import kotlinx.android.synthetic.main.memberoptionsbottomsheet.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers.Default
 import kotlinx.coroutines.launch
@@ -53,15 +59,18 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private lateinit var tagrecyclerview: RecyclerView
     private val sortedMemberList = ArrayList<MemberModel>()
     private lateinit var memberRecyclerView: RecyclerView
+    private val requestModelList =  ArrayList<RequestModel>()
+    private var isAdmin = false
     private lateinit var requestsRecyclerView: RecyclerView
     private lateinit var requestAdapter : RequestAdapter
     private lateinit var mutemessages: SwitchMaterial
     private lateinit var mutecalls: SwitchMaterial
+    private val adminList = ArrayList<String>()
     private lateinit var nosimping: SwitchMaterial
     private lateinit var videocall: SwitchMaterial
     private lateinit var approval: SwitchMaterial
     private lateinit var rankupdates: CheckBox
-    private lateinit var currentUserMemberModel : MemberModel
+    private var currentUserMemberModel : MemberModel = MemberModel("","","",false,false,"")
     private lateinit var tagadapter: SearchTagsAdapter
     private lateinit var memberAdapter: MembersAdapter
     private lateinit var addmembers: TextView
@@ -116,6 +125,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         addtogroup = findViewById<Button>(R.id.addtogc)
         leavechat = findViewById(R.id.leavegroup)
         requestsRecyclerView = findViewById(R.id.requests)
+        gcname.setText(originalGroupName)
         var hidetags = false
         var namelock = true
         requestsRecyclerView.layoutManager = LinearLayoutManager(this)
@@ -127,7 +137,6 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         val accessibilitytext = findViewById<TextView>(R.id.textView16)
         val go = findViewById<ImageView>(R.id.go)
         val membercount = findViewById<TextView>(R.id.membercount)
-        var isAdmin = false
         groupphoto = findViewById(R.id.gcphoto)
         gctag = intent.getStringExtra("tag").toString()
         go.visibility = View.GONE
@@ -149,7 +158,8 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         },gctag,this)
         groupInfoViewModel.getGroupInfo(gctag)
         groupInfoViewModel.liveGroupInfoModelList.observe(this){
-            val adminList = it.adminList
+            adminList.clear()
+            adminList.addAll(it.adminList)
             for (i in adminList){
                 if(i == auth.currentUser!!.uid){
                     isAdmin = true
@@ -312,22 +322,33 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
             firestore.collection("groups").document(gctag).update("rankupdates", bool)
         }
 
+
         membersViewModel.getRequests(gctag)
-        if(membersViewModel.liveRequestList.value == null){
+        if(membersViewModel.liveRequestList.value == null) {
             requestsText.visibility = View.GONE
             addtogroup.visibility = View.GONE
         }
         membersViewModel.liveRequestList.observe(this){
-            if(it.size==0){
-                requestsText.visibility = View.GONE
-                addtogroup.visibility = View.GONE
-            }else{
-                requestsText.visibility = View.VISIBLE
-                addtogroup.visibility = View.VISIBLE
-                requestAdapter.setRequestList(it)
-                requestsRecyclerView.adapter = requestAdapter
-                for(i in it){
-                    requestList.add(i.id)
+            if(isAdmin){
+                if(it.size==0){
+                    requestsText.visibility = View.GONE
+                    addtogroup.visibility = View.GONE
+                    requestsRecyclerView.visibility = View.GONE
+                }else{
+                    Log.d("rqsts",it.toString())
+                    requestsText.visibility = View.VISIBLE
+                    addtogroup.visibility = View.VISIBLE
+                    requestsRecyclerView.visibility = View.VISIBLE
+                    requestModelList.clear()
+                    requestAdapter.clearList()
+                    it.addAll(requestModelList)
+                    requestAdapter.setRequestList(it)
+                    requestsRecyclerView.adapter = requestAdapter
+                    requestList.clear()
+                    for(i in it){
+                        requestList.add(i.id)
+                    }
+                    Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
                 }
             }
         }
@@ -340,14 +361,21 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
             for(i in arrayList){
                 if(memberList.isNotEmpty()){
                     memberList.add(i)
-                    firestore.collection("groups").document(gctag).update("members",memberList).addOnSuccessListener {
+                    firestore.collection("groups").document(gctag).update("members",memberList,"membercount",memberList.size).addOnSuccessListener {
                         memberAdapter.notifyDataSetChanged()
-                        Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
                         if(requestList.isNotEmpty()){
+//                            Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
+//                            requestAdapter.notifyRemove(requestList.indexOf(i))
                             requestList.remove(i)
                             firestore.collection("groups").document(gctag).update("requests",requestList).addOnSuccessListener {
-                                requestAdapter.notifyDataSetChanged()
-                                requestAdapter.notifychange()
+//                                for(j in requestModelList){
+//                                    if(j.id==i){
+//                                        requestModelList.remove(j)
+//                                        requestAdapter.setRequestList(requestModelList)
+//                                        requestAdapter.notifyDataSetChanged()
+//                                    }
+//                                }
+//                                requestAdapter.notifyDataSetChanged()
                             }
                         }
                     }
@@ -415,27 +443,37 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
 
 
         memberRecyclerView.layoutManager = LinearLayoutManager(this)
-        memberAdapter = MembersAdapter(this,this,this,this)
+        memberAdapter = MembersAdapter(this,this,this,this,isAdmin)
         membersViewModel.getMembers(gctag)
-
         membersViewModel.liveData.observe(this){
-            CoroutineScope(Default).launch {
-                sortedMemberList.clear()
-                sortedMemberList.addAll(getSortedMemberList(it))
-            }
-            if(sortedMemberList.isNotEmpty()){
-                memberAdapter.setMembersList(sortedMemberList)
-            }else{
-                memberAdapter.setMembersList(it)
-            }
+            memberAdapter.clearList()
+//            for(i in it){
+//                if(i.memberusername == sharedPreferences.getString("username","")){
+//                    currentUserMemberModel = i
+//                }
+//            }
+//            if(currentUserMemberModel.memberusername!="" && currentUserMemberModel.membername!=""){
+//                it.remove(currentUserMemberModel)
+//                it.add(0,currentUserMemberModel)
+//            }
+//            CoroutineScope(Default).launch {
+//                sortedMemberList.clear()
+//                sortedMemberList.addAll(getSortedMemberList(it))
+//            }
+//            if(sortedMemberList.isNotEmpty()){
+//                memberAdapter.setMembersList(sortedMemberList)
+//            }else{
+//                memberAdapter.setMembersList(it)
+//            }
+            memberAdapter.setMembersList(it)
             memberRecyclerView.adapter = memberAdapter
         }
     }
 
     private suspend fun getSortedMemberList(it : ArrayList<MemberModel>):ArrayList<MemberModel>{
         val suspendModel = getCurrentUserMemberModel(it)
-        it.remove(currentUserMemberModel)
-        it.add(0,currentUserMemberModel)
+        it.remove(suspendModel)
+        it.add(0,suspendModel)
         return it
     }
 
@@ -500,6 +538,83 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     }
 
     override fun onMenuClicked(position: Int, memberModeList: ArrayList<MemberModel>) {
+        val dialog = BottomSheetDialog(this)
+        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+        dialog.setContentView(R.layout.memberoptionsbottomsheet)
+        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+        dialog.window!!.attributes.windowAnimations = R.style.Dialoganimation
+        dialog.window!!.setGravity(Gravity.BOTTOM)
+        dialog.displaynameofmember.text = memberModeList[position].membername
+        if(isAdmin){
+            dialog.removeuser.visibility = View.VISIBLE
+            dialog.makeadmin.visibility = View.VISIBLE
+            if(memberModeList[position].isAdmin){
+                dialog.makeadmin.text = "Remove admin"
+                dialog.makeadmin.setTextColor(AppCompatResources.getColorStateList(this,R.color.black))
+            }else{
+                dialog.makeadmin.text = "Make admin"
+                dialog.makeadmin.setTextColor(AppCompatResources.getColorStateList(this,R.color.fblue))
+            }
+        }else{
+            dialog.removeuser.visibility = View.GONE
+            dialog.makeadmin.visibility = View.GONE
+        }
+        dialog.removeuser.setOnClickListener {
+            if (memberList.isNotEmpty()) {
+                if(memberModeList[position].isAdmin){
+                    memberList.remove(memberModeList[position].id)
+                    adminList.remove(memberModeList[position].id)
+                    firestore.collection("groups").document(gctag)
+                        .update("members", memberList, "membercount", memberList.size,"admins",adminList)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, memberModeList.toString(), Toast.LENGTH_SHORT)
+                                .show()
+                            memberModeList.removeAt(position)
+                            memberAdapter.clearList()
+                            memberAdapter.setMembersList(memberModeList)
+                            memberAdapter.notifyDataSetChanged()
+//                        memberAdapter.notifychange()
+                            dialog.dismiss()
+                        }
+                }else {
+                    memberList.remove(memberModeList[position].id)
+                    firestore.collection("groups").document(gctag)
+                        .update("members", memberList, "membercount", memberList.size)
+                        .addOnSuccessListener {
+                            Toast.makeText(this, memberModeList.toString(), Toast.LENGTH_SHORT)
+                                .show()
+                            memberModeList.removeAt(position)
+                            memberAdapter.clearList()
+                            memberAdapter.setMembersList(memberModeList)
+                            memberAdapter.notifyDataSetChanged()
+//                        memberAdapter.notifychange()
+                            dialog.dismiss()
+                        }
+                }
+            }
+        }
+        dialog.makeadmin.setOnClickListener {
+            if(dialog.makeadmin.text == "Make admin") {
+                if (adminList.isNotEmpty()) {
+                    adminList.add(memberModeList[position].id)
+                    firestore.collection("groups").document(gctag).update("admins", adminList)
+                        .addOnSuccessListener {
+                            memberAdapter.notifyDataSetChanged()
+                            dialog.dismiss()
+                        }
+                }
+            }else{
+                if (adminList.isNotEmpty()) {
+                    adminList.remove(memberModeList[position].id)
+                    firestore.collection("groups").document(gctag).update("admins", adminList)
+                        .addOnSuccessListener {
+                            memberAdapter.notifyDataSetChanged()
+                            dialog.dismiss()
+                        }
+                }
+            }
+        }
+        dialog.show()
     }
 
     override fun onRequestRemoved() {

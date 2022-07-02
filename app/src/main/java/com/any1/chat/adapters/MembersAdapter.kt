@@ -2,9 +2,9 @@ package com.any1.chat.adapters
 
 import android.content.Context
 import android.content.Context.MODE_PRIVATE
-import android.view.LayoutInflater
-import android.view.View
-import android.view.ViewGroup
+import android.graphics.Color
+import android.graphics.drawable.ColorDrawable
+import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
@@ -17,13 +17,16 @@ import com.any1.chat.interfaces.OnMemberClickListener
 import com.any1.chat.interfaces.OnMenuClickListener
 import com.any1.chat.models.MemberModel
 import com.bumptech.glide.Glide
+import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.button.MaterialButton
 import com.google.firebase.auth.FirebaseAuth
 import com.mikhaellopez.circularimageview.CircularImageView
+import kotlinx.android.synthetic.main.memberoptionsbottomsheet.*
 
-class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberClickListener, val onMenuClickListener : OnMenuClickListener, val onConnectClickListener: OnConnectClickListener) : RecyclerView.Adapter<MembersAdapter.MessageHolder>() {
+class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberClickListener, val onMenuClickListener : OnMenuClickListener, val onConnectClickListener: OnConnectClickListener, val isAdmin : Boolean) : RecyclerView.Adapter<MembersAdapter.MessageHolder>() {
 
-    private lateinit var membersArrayList: ArrayList<MemberModel>
+    private val membersArrayList = ArrayList<MemberModel>()
+    private val membersList = ArrayList<String>()
     private val sharedpref = context.getSharedPreferences(context.packageName+"user", MODE_PRIVATE)
     inner class MessageHolder(itemView : View) : RecyclerView.ViewHolder(itemView){
         val membername : TextView = itemView.findViewById(R.id.membername)
@@ -55,7 +58,7 @@ class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberC
     }
 
     fun setMembersList(arrayList: ArrayList<MemberModel>){
-        membersArrayList = arrayList
+        membersArrayList.addAll(arrayList)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageHolder {
@@ -67,6 +70,10 @@ class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberC
 
     fun clearList(){
         membersArrayList.clear()
+    }
+
+    fun notifychange(){
+        notifyDataSetChanged()
     }
 
     override fun onBindViewHolder(holder: MessageHolder, position: Int) {

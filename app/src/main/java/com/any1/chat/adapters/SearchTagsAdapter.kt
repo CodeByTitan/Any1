@@ -99,6 +99,7 @@ class SearchTagsAdapter(context: Context, val isAdmin : Boolean, val tag : Strin
     override fun onBindViewHolder(holder: holder, position: Int) {
         if(!isAdmin){
             holder.imageView.visibility = View.GONE
+            holder.textView.setPadding(50,10,50,10)
         }else{
             holder.imageView.visibility = View.VISIBLE
         }

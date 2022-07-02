@@ -45,7 +45,7 @@ class MembersRepository(val memberListListener : MemberListListener, val request
                                 isConnected = userdoc.exists()
                             }.addOnFailureListener{isConnected = false}
                             isAdmin = adminList.contains(i)
-                            model = MemberModel(membername,username,uri,isConnected,isAdmin)
+                            model = MemberModel(membername,username,uri,isConnected,isAdmin,i)
                             membersArrayList.add(model)
                             val filteredList = membersArrayList.distinct()
                             val filteredArrayList = ArrayList(filteredList)
@@ -73,19 +73,21 @@ class MembersRepository(val memberListListener : MemberListListener, val request
     fun getRequests(tag : String){
         firestore.collection("groups").document(tag).addSnapshotListener {
             document, error ->
-            requestList.clear()
             if(document!=null) {
-                for(id in document.get("requests") as ArrayList<String>){
-                    firestore.collection("users").document(id).get().addOnSuccessListener { doc ->
-                        val name = doc.getString("displayname").toString()
-                        val username = doc.getString("username").toString()
-                        val uri = doc.getString("imageurl").toString()
-                        val model = RequestModel(name, username, uri, true,id)
-                        requestList.add(model)
-                        requestListListener.showRequestList(requestList)
+                if(document.get("requests")!=null) {
+                    requestList.clear()
+                    for (id in document.get("requests") as ArrayList<String>) {
+                        firestore.collection("users").document(id).get()
+                            .addOnSuccessListener { doc ->
+                                val name = doc.getString("displayname").toString()
+                                val username = doc.getString("username").toString()
+                                val uri = doc.getString("imageurl").toString()
+                                val model = RequestModel(name, username, uri, true, id)
+                                requestList.add(model)
+                                requestListListener.showRequestList(requestList)
+                            }
                     }
                 }
-
             }
         }
     }
