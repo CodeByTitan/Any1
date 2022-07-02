@@ -26,7 +26,7 @@ import com.mikhaellopez.circularimageview.CircularImageView
 
 class RequestAdapter(val context : Context, val onRequestClickListener: OnRequestClickListener, val string: String, val requestRemovedListener: RequestRemovedListener) : RecyclerView.Adapter<RequestAdapter.RequestHolder>() {
 
-    private lateinit var requestList: ArrayList<RequestModel>
+    private val requestList = ArrayList<RequestModel>()
     private val userIdList = ArrayList<String>()
 
     inner class RequestHolder(itemView : View) : RecyclerView.ViewHolder(itemView){
@@ -67,17 +67,21 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
         }
     }
 
-    fun notifychange(){
-        notifyDataSetChanged()
-    }
+
     fun getUserIdOfCheckedRequests(): ArrayList<String>{
         return userIdList
     }
 
     fun setRequestList(arrayList: ArrayList<RequestModel>){
-        requestList= arrayList
+        requestList.addAll(arrayList)
     }
 
+    fun clearList(){
+        requestList.clear()
+    }
+    fun notifyRemove(int: Int){
+        notifyItemRemoved(int)
+    }
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RequestHolder {
         val context = parent.context
         val inflater = LayoutInflater.from(context)
@@ -86,6 +90,9 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
     }
 
     override fun onBindViewHolder(holder: RequestHolder, position: Int) {
+        if(requestList.size == 0){
+            requestRemovedListener.onRequestRemoved()
+        }
         holder.name.text = requestList[position].name
         when (requestList[position].uri) {
             "male" -> {

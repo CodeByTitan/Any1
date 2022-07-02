@@ -84,7 +84,9 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
             }
         }
     }
-
+    fun clearChatModelList(){
+        chatModelList.clear()
+    }
     private fun assignMessageBackground(item: String,emojiTextView: EmojiTextView,position: Int,relativeLayout: RelativeLayout){
         if(isEmoji(item)){
             if(item.length>20){
@@ -129,6 +131,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                 linearParams.setMargins(0, 2, 15, 10)
                 relativeLayout.layoutParams = linearParams
                 relativeLayout.requestLayout()
+                emojiTextView.setPadding(40,30,30,30)
                 emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightlastmessage)
             }
         }else{

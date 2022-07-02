@@ -5,9 +5,7 @@ import android.app.Dialog
 import android.content.Intent
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
-import android.net.Uri
 import android.os.Bundle
-import android.util.Log
 import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
@@ -15,15 +13,11 @@ import android.view.ViewGroup
 import android.view.Window
 import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.widget.SearchView
-import androidx.fragment.app.activityViewModels
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.any1.chat.R
 import com.any1.chat.activities.Chat
-import com.any1.chat.activities.MainActivity
-import com.any1.chat.activities.Search
 import com.any1.chat.adapters.SearchAdapter
 import com.any1.chat.interfaces.OnSearchGroupClickListener
 import com.any1.chat.models.SearchModel
@@ -95,7 +89,7 @@ class searchbygctags : Fragment() , OnSearchGroupClickListener{
         memberList = groupModelList[position].memberList
         requestList = groupModelList[position].requestList
         if(groupModelList[position].isApprovalRequired){
-            showDialog()
+            showDialog(groupModelList[position].tag,groupModelList[position].requestList)
         }else{
             if(groupModelList[position].membercount < 30){
                 if(!memberList.contains(auth.currentUser!!.uid)) {
@@ -126,7 +120,7 @@ class searchbygctags : Fragment() , OnSearchGroupClickListener{
         ).toBundle()
         startActivity(intent, bndlAnimation)
     }
-    private fun showDialog() {
+    private fun showDialog(tag: String, list: ArrayList<String>) {
         val dialog = Dialog(requireContext())
         dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
         dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
@@ -137,16 +131,18 @@ class searchbygctags : Fragment() , OnSearchGroupClickListener{
         val cancel  = dialog.findViewById<TextView>(R.id.approvalcancel)
         sendrequest.setOnClickListener {
             if (!memberList.contains(auth.currentUser!!.uid)) {
-                if(!requestList.contains(auth.currentUser!!.uid)) {
-                    requestList.add(auth.currentUser!!.uid)
-                    firestore.collection("groups").document(gctag).update("requests",requestList)
-                        .addOnSuccessListener {
+                if(!list.contains(auth.currentUser!!.uid)) {
+                    list.add(auth.currentUser!!.uid)
+                    firestore.collection("groups").document(tag).update("requests",
+                        requestList
+                    ).addOnSuccessListener {
                             Toast.makeText(context, "Request has been sent", Toast.LENGTH_SHORT)
                                 .show()
                             dialog.dismiss()
                         }
                 }else{
-                    Toast.makeText(context, "You have already sent request to this group", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, "You have already sent request to this group : $tag", Toast.LENGTH_SHORT).show()
+                    Toast.makeText(context, list.toString(), Toast.LENGTH_SHORT).show()
                     dialog.dismiss()
                 }
             }else{

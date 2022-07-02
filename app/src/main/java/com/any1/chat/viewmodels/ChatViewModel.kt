@@ -12,7 +12,7 @@ import kotlinx.coroutines.launch
 
 class ChatViewModel: ViewModel(),MessageReceiveListener{
     private val mutableLiveData: MutableLiveData<ArrayList<ChatModel>?> = MutableLiveData<ArrayList<ChatModel>?>()
-    var getGroupMessages : LiveData<ArrayList<ChatModel>?> = mutableLiveData
+    var getGroupMessages : MutableLiveData<ArrayList<ChatModel>?> = mutableLiveData
     val chatRepository = ChatRepository(this)
 
     fun getMessages(grouptag : String){
@@ -22,7 +22,7 @@ class ChatViewModel: ViewModel(),MessageReceiveListener{
     }
 
     override fun OnMessageReceived(messageModels: ArrayList<ChatModel>) {
-        mutableLiveData.value = messageModels
+        mutableLiveData.postValue(messageModels)
     }
 
     fun stopReceiveingMessages() {

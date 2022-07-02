@@ -2,14 +2,17 @@ package com.any1.chat.repository
 
 import android.util.Log
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import com.any1.chat.activities.Chat
 import com.any1.chat.interfaces.MessageReceiveListener
 import com.any1.chat.models.ChatModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentSnapshot
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import java.lang.StringBuilder
+import java.text.SimpleDateFormat
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -19,11 +22,11 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
     private val auth = FirebaseAuth.getInstance()
     private val messageList: ArrayList<ChatModel> = ArrayList()
     private var listWithoutDotsStr = ArrayList<String>()
-    private lateinit var sortedList : List<String>
+    private val temporaryList = ArrayList<ChatModel>()
     private lateinit var finalList : List<String>
     private val messageListForADay = ArrayList<ChatModel>()
 
-    suspend fun getMessages(grouptag: String) {
+    fun getMessages(grouptag: String) {
         firestore.collection("groups").document(grouptag).collection("messages").orderBy("timestamp",Query.Direction.DESCENDING)
             .addSnapshotListener { value, error ->
                 if (value != null) {
@@ -33,13 +36,41 @@ class ChatRepository ( val messageReceiveListener : MessageReceiveListener) {
                         firestore.collection("groups").document(grouptag).collection("messages").document(doc).collection("messages").orderBy("timestamp", Query.Direction.DESCENDING).addSnapshotListener{
                             value,error ->
                             if(value!=null) {
-                                for (document in value.documents) {
-                                    val senderid = document.getString("sender").toString()
-                                    val message = document.getString("message").toString()
-                                    val senderpfpurl = document.getString("senderpfpuri").toString()
-                                    val model = ChatModel(message, document.id, senderid, senderpfpurl)
-                                    messageList.add(messageList.size,model)
-                                    messageReceiveListener.OnMessageReceived(messageList)
+                                val date = Date(System.currentTimeMillis())
+                                val formatter1= SimpleDateFormat("E MMM dd HH:mm:ss Z yyyy")
+                                val formatter2 = SimpleDateFormat("dd.MM.yyyy")
+                                val date1 = formatter1.parse(date.toString())?.let { formatter2.format(it) }
+                                if(date1 == doc){
+                                    if(messageList.size!=0){
+                                        for (document in value.documents) {
+                                            val senderid = document.getString("sender").toString()
+                                            val message = document.getString("message").toString()
+                                            val senderpfpurl = document.getString("senderpfpuri").toString()
+                                            val model = ChatModel(message, document.id, senderid, senderpfpurl)
+                                            temporaryList.add(model)
+                                        }
+                                        temporaryList.removeAll(messageList)
+                                        messageList.addAll(0,temporaryList)
+                                        messageReceiveListener.OnMessageReceived(messageList)
+                                    }else{
+                                        for (document in value.documents) {
+                                            val senderid = document.getString("sender").toString()
+                                            val message = document.getString("message").toString()
+                                            val senderpfpurl = document.getString("senderpfpuri").toString()
+                                            val model = ChatModel(message, document.id, senderid, senderpfpurl)
+                                            messageList.add(model)
+                                            messageReceiveListener.OnMessageReceived(messageList)
+                                        }
+                                    }
+                                }else{
+                                    for (document in value.documents) {
+                                        val senderid = document.getString("sender").toString()
+                                        val message = document.getString("message").toString()
+                                        val senderpfpurl = document.getString("senderpfpuri").toString()
+                                        val model = ChatModel(message, document.id, senderid, senderpfpurl)
+                                        messageList.add(model)
+                                        messageReceiveListener.OnMessageReceived(messageList)
+                                    }
                                 }
                             }
                         }
