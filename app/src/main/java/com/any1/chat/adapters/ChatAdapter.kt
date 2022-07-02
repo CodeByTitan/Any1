@@ -104,7 +104,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
         emojiTextView.textSize = 15f
         if(chatModelList[position].sender == auth.currentUser!!.uid){
             if(position!=0){
-                emojiTextView.setPadding(40,40,30,40)
+                emojiTextView.setPadding(40,30,30,30)
                 if(position== chatModelList.size-1){
                     emojiTextView.background = AppCompatResources.getDrawable(context,R.drawable.backgroundrightfirstmsg)
                 }else{
@@ -119,7 +119,6 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                     }
                 }
             }else{
-                emojiTextView.setPadding(40,40,30,40)
                 val linearParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,
@@ -133,7 +132,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
             }
         }else{
             if (position != 0) {
-                emojiTextView.setPadding(30,40,40,40)
+                emojiTextView.setPadding(30,30,40,30)
                 if (position == chatModelList.size - 1) {
                     emojiTextView.background = AppCompatResources.getDrawable(
                         context,
@@ -159,7 +158,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                     }
                 }
             } else {
-                emojiTextView.setPadding(30,40,40,40)
+                emojiTextView.setPadding(30,30,40,30)
                 val linearParams = LinearLayout.LayoutParams(
                     LinearLayout.LayoutParams(
                         LinearLayout.LayoutParams.MATCH_PARENT,

@@ -188,70 +188,10 @@ class Chat : AppCompatActivity() , BasicClickListener{
         viewModel.getGroupMessages.observe(this){
             if (it != null) {
                 adapter.clearChatModelList()
-//                CoroutineScope(Default).launch {
-//                    temporaryMessageList = getMessageList(it)
-//                }
-
-//                CoroutineScope(Default).launch {
-//                   val temporaryMessageList = async { getMessageList(it) }
-//                    adapter.setChatModelList(temporaryMessageList.await())
-//                    recyclerView.adapter = adapter
-//                }
-//                val time = measureTimeMillis {
-//                    CoroutineScope(Default).launch {
-//                        temporaryMessageList = getMessageList(it)
-////                    withContext(Main){
-////                        adapter.setChatModelList(temporaryMessageList)
-////                        recyclerView.adapter = adapter
-////                    }
-//                        adapter.setChatModelList(temporaryMessageList)
-//                        recyclerView.adapter = adapter
-//                    }
-//                }
-//                CoroutineScope(Default).launch {
-//                    temporaryMessageList = getMessageList(it)
-////                    withContext(Main){
-////                        adapter.setChatModelList(temporaryMessageList)
-////                        recyclerView.adapter = adapter
-////                    }
-//                }
-
-//                temporaryMessageList = getMessageList(it)
-                val list = ArrayList<ChatModel>()
-                Log.d("this",it.toString())
-                for(i in it){
-                    if (i != null) {
-                        Log.d("this",i.toString())
-                        for(j in i){
-                            list.add(j)
-                        }
-                    }
-                }
-                adapter.setChatModelList(list)
+                adapter.setChatModelList(it)
                 recyclerView.adapter = adapter
-//                Log.d("main", time.toString())
-//                recyclerView.scrollToPosition(it.size)
-//                smoothScroller.targetPosition = it.size
-//                recyclerView.layoutManager!!.startSmoothScroll(smoothScroller)
             }
         }
-    }
-
-    private suspend fun getMessageList(arrayList: ArrayList<ArrayList<ChatModel>?>?):ArrayList<ChatModel>{
-        val list = ArrayList<ChatModel>()
-        if (arrayList != null) {
-            for(i in arrayList){
-                if (i != null) {
-                    for(j in i){
-                        list.add(j)
-                    }
-                }
-            }
-        }
-//        val finallist = ArrayList<ChatModel>()
-//        finallist.clear()
-//        finallist.addAll(list)
-        return list
     }
 
     private fun sortMessagesByTime(arrayList: ArrayList<ChatModel>): List<ChatModel> {
