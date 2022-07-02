@@ -44,8 +44,6 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.single.PermissionListener
 import com.mikhaellopez.circularimageview.CircularImageView
 import kotlinx.coroutines.*
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.Dispatchers.Main
 import java.io.File
 import java.io.IOException
 import java.lang.Runnable
@@ -54,7 +52,6 @@ import java.text.SimpleDateFormat
 import java.util.*
 import java.util.concurrent.Executors
 import kotlin.collections.ArrayList
-import kotlin.system.measureTimeMillis
 
 
 // TODO: Rename parameter arguments, choose names that match

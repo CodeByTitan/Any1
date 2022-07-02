@@ -50,7 +50,7 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
     val MESSAGE_LEFT = 1 // FOR FRIEND LAYOUT
     private val chatModelList = ArrayList<ChatModel>()
 
-    fun setChatModelList(messageModelList: ArrayList<ChatModel>) {
+    fun setChatModelList(messageModelList: ArrayList<ArrayList<ChatModel>?>?) {
         chatModelList.addAll(messageModelList)
     }
 
