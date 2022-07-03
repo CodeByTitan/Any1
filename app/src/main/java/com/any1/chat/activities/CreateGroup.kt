@@ -212,6 +212,7 @@ class CreateGroup : AppCompatActivity() {
                     dialog3.show()
                     val hashMap = hashMapOf(
                     "admins" to admins,
+                    "requests" to arrayListOf<String>(),
                     "approval" to grouppreferences.getString("approval", "").toBoolean(),
                     "name" to grouppreferences.getString("gcname", ""),
                     "nosimping" to false,

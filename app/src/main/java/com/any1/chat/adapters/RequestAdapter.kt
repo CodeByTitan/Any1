@@ -72,7 +72,7 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
         return userIdList
     }
 
-    fun setRequestList(arrayList: ArrayList<RequestModel>){
+    fun setRequestList(arrayList: List<RequestModel>){
         requestList.addAll(arrayList)
     }
 
@@ -90,6 +90,7 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
     }
 
     override fun onBindViewHolder(holder: RequestHolder, position: Int) {
+        userIdList.clear()
         if(requestList.size == 0){
             requestRemovedListener.onRequestRemoved()
         }
@@ -109,22 +110,22 @@ class RequestAdapter(val context : Context, val onRequestClickListener: OnReques
         }
         holder.username.text = requestList[position].username
         holder.checkbox.isChecked = requestList[position].isChecked
-        if(holder.checkbox.isChecked){
-            userIdList.add(requestList[position].id)
+        if(requestList[position].isChecked){
+            if(!userIdList.contains(requestList[position].id))  userIdList.add(requestList[position].id)
+        }else{
+            if(userIdList.contains(requestList[position].id)){
+                userIdList.remove(requestList[position].id)
+            }
         }
         holder.checkbox.setOnClickListener {
             if(requestList[position].isChecked){
                 requestList[position].isChecked = false
                 holder.checkbox.isChecked = false
-                if(!userIdList.contains(requestList[position].id)){
-                    userIdList.add(requestList[position].id)
-                }
+                userIdList.remove(requestList[position].id)
             }else{
                 requestList[position].isChecked = true
                 holder.checkbox.isChecked = true
-                if(userIdList.contains(requestList[position].id)){
-                    userIdList.remove(requestList[position].id)
-                }
+                userIdList.add(requestList[position].id)
             }
         }
     }

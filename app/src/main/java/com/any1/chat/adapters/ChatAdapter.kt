@@ -50,8 +50,10 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
     val MESSAGE_LEFT = 1 // FOR FRIEND LAYOUT
     private val chatModelList = ArrayList<ChatModel>()
 
-    fun setChatModelList(messageModelList: ArrayList<ArrayList<ChatModel>?>?) {
-        chatModelList.addAll(messageModelList)
+    fun setChatModelList(messageModelList: ArrayList<ChatModel>?) {
+        if (messageModelList != null) {
+            chatModelList.addAll(messageModelList)
+        }
     }
 
     fun clearChatModelList(){
@@ -83,9 +85,6 @@ class ChatAdapter(val basicClickListener: BasicClickListener, val context: Conte
                 imageView.setImageDrawable(AppCompatResources.getDrawable(context,R.drawable.gigachad))
             }
         }
-    }
-    fun clearChatModelList(){
-        chatModelList.clear()
     }
     private fun assignMessageBackground(item: String,emojiTextView: EmojiTextView,position: Int,relativeLayout: RelativeLayout){
         if(isEmoji(item)){

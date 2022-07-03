@@ -1,14 +1,8 @@
 package com.any1.chat.repository
 
-import android.util.Log
-import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import com.any1.chat.activities.Chat
 import com.any1.chat.interfaces.MessageReceiveListener
 import com.any1.chat.models.ChatModel
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentSnapshot
-import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import java.lang.StringBuilder

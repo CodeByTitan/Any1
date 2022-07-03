@@ -19,8 +19,8 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.appcompat.content.res.AppCompatResources
 import androidx.appcompat.widget.AppCompatSpinner
 import androidx.appcompat.widget.Toolbar
-import androidx.core.widget.doAfterTextChanged
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.any1.chat.R
@@ -41,14 +41,11 @@ import com.mikhaellopez.circularimageview.CircularImageView
 import kotlinx.android.synthetic.main.activity_login.*
 import kotlinx.android.synthetic.main.fragment_profile.*
 import kotlinx.android.synthetic.main.memberoptionsbottomsheet.*
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers.Default
-import kotlinx.coroutines.launch
-import java.lang.reflect.Member
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 import java.util.*
 import kotlin.collections.ArrayList
-import kotlin.coroutines.CoroutineContext
-import kotlin.coroutines.coroutineContext
 
 
 class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener,OnConnectClickListener, RequestRemovedListener{
@@ -59,8 +56,13 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private lateinit var tagrecyclerview: RecyclerView
     private val sortedMemberList = ArrayList<MemberModel>()
     private lateinit var memberRecyclerView: RecyclerView
-    private val requestModelList =  ArrayList<RequestModel>()
+    var isMemberAdmin = false
+    var reqsize = 0
+    private val listFromFirestore = ArrayList<String>()
+    private val listFromRepository = ArrayList<String>()
+    private var requestModelList = ArrayList<RequestModel>()
     private var isAdmin = false
+    private var model = RequestModel("","","",false,"")
     private lateinit var requestsRecyclerView: RecyclerView
     private lateinit var requestAdapter : RequestAdapter
     private lateinit var mutemessages: SwitchMaterial
@@ -68,6 +70,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
     private val adminList = ArrayList<String>()
     private lateinit var nosimping: SwitchMaterial
     private lateinit var videocall: SwitchMaterial
+    private val memberModeList = ArrayList<MemberModel>()
     private lateinit var approval: SwitchMaterial
     private lateinit var rankupdates: CheckBox
     private var currentUserMemberModel : MemberModel = MemberModel("","","",false,false,"")
@@ -139,6 +142,7 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         val membercount = findViewById<TextView>(R.id.membercount)
         groupphoto = findViewById(R.id.gcphoto)
         gctag = intent.getStringExtra("tag").toString()
+        requestList.clear()
         go.visibility = View.GONE
         membersViewModel = ViewModelProvider(this).get(MembersViewModel::class.java)
         groupInfoViewModel = ViewModelProvider(this).get(GroupInfoViewModel::class.java)
@@ -330,25 +334,96 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         }
         membersViewModel.liveRequestList.observe(this){
             if(isAdmin){
-                if(it.size==0){
+                if(it == null || it.isEmpty()){
                     requestsText.visibility = View.GONE
+                    addtogroup.visibility = View.GONE
                     addtogroup.visibility = View.GONE
                     requestsRecyclerView.visibility = View.GONE
                 }else{
-                    Log.d("rqsts",it.toString())
-                    requestsText.visibility = View.VISIBLE
-                    addtogroup.visibility = View.VISIBLE
-                    requestsRecyclerView.visibility = View.VISIBLE
-                    requestModelList.clear()
-                    requestAdapter.clearList()
-                    it.addAll(requestModelList)
-                    requestAdapter.setRequestList(it)
-                    requestsRecyclerView.adapter = requestAdapter
-                    requestList.clear()
-                    for(i in it){
-                        requestList.add(i.id)
+
+//                    CoroutineScope(Main).launch {
+//                        val job1 = launch { firestore.collection("groups").document(gctag).get().addOnSuccessListener {
+//                            listFromFirestore.clear()
+//                            listFromFirestore.addAll(it.get("requests") as ArrayList<String>)
+//                        } }
+//                        job1.join()
+//                        val job2 = launch {
+//                            for(i in it){
+//                                listFromRepository.add(i.id)
+//                            }
+//                        }
+//                        job2.join()
+//
+//                        launch{
+//                            if(listFromRepository.sort() != listFromFirestore.sort() && listFromRepository.isNotEmpty() && listFromFirestore.isNotEmpty()){
+//                                Log.d("rqsts", "from if:$it")
+//                                Log.d("rqsts","requestmodellist from if : $requestModelList")
+//                                requestsText.visibility = View.VISIBLE
+//                                Toast.makeText(this@Groupinfo, "upar", Toast.LENGTH_SHORT).show()
+//                                addtogroup.visibility = View.VISIBLE
+//                                requestsRecyclerView.visibility = View.VISIBLE
+//                                requestAdapter.clearList()
+//                                requestAdapter.setRequestList(requestModelList)
+//                                requestsRecyclerView.adapter = requestAdapter
+//                            }else{
+//                                Log.d("rqsts",it.toString())
+//                                Log.d("rqsts","requestmodellist : $requestModelList")
+//                                requestsText.visibility = View.VISIBLE
+//                                Toast.makeText(this@Groupinfo, "neeche", Toast.LENGTH_SHORT).show()
+//                                addtogroup.visibility = View.VISIBLE
+//                                requestsRecyclerView.visibility = View.VISIBLE
+//                                requestAdapter.clearList()
+//                                requestModelList.addAll(it.distinct())
+//                                requestAdapter.setRequestList(it.distinct())
+//                                requestsRecyclerView.adapter = requestAdapter
+//                                requestList.clear()
+//                                for(i in it){
+//                                    requestList.add(i.id)
+//                                }
+//                            }
+//                        }
+
+                    if(requestModelList.isNotEmpty()){
+                        Log.d("rqsts", "from if:$it")
+                        Log.d("rqsts","requestmodellist from if : $requestModelList")
+                        requestsText.visibility = View.VISIBLE
+                        Toast.makeText(this@Groupinfo, "upar", Toast.LENGTH_SHORT).show()
+                        addtogroup.visibility = View.VISIBLE
+                        requestsRecyclerView.visibility = View.VISIBLE
+                        requestAdapter.clearList()
+                        requestAdapter.setRequestList(requestModelList)
+                        requestsRecyclerView.adapter = requestAdapter
+                    }else{
+                        Toast.makeText(this, "neeche", Toast.LENGTH_SHORT).show()
+                        Log.d("rqsts",it.toString())
+                        Log.d("rqsts","requestmodellist : $requestModelList")
+                        requestsText.visibility = View.VISIBLE
+                        addtogroup.visibility = View.VISIBLE
+                        requestsRecyclerView.visibility = View.VISIBLE
+                        requestAdapter.clearList()
+                        requestModelList.clear()
+                        requestModelList.addAll(it)
+                        requestAdapter.setRequestList(requestModelList.distinct())
+                        requestsRecyclerView.adapter = requestAdapter
+                        requestList.clear()
+                        for(i in it){
+                            requestList.add(i.id)
+                        }
                     }
-                    Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
+//                    }
+//                    if(it.sortedBy { it.username}==requestModelList.sortedBy { it.username } && it.isNotEmpty() && requestModelList.isNotEmpty()){
+//                        Toast.makeText(this, "koled", Toast.LENGTH_SHORT).show()
+//                        Log.d("rqsts",it.toString())
+//                        Log.d("rqsts","requestmodellist : $requestModelList")
+//                        requestsText.visibility = View.VISIBLE
+//                        addtogroup.visibility = View.VISIBLE
+//                        requestsRecyclerView.visibility = View.VISIBLE
+//                        requestAdapter.clearList()
+//                        requestAdapter.setRequestList(requestModelList.distinct())
+//                        requestsRecyclerView.adapter = requestAdapter
+//                    }
+//                    else{
+//                    listFromRepository.clear()
                 }
             }
         }
@@ -358,25 +433,20 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
 
         addtogroup.setOnClickListener {
             val arrayList = requestAdapter.getUserIdOfCheckedRequests()
-            for(i in arrayList){
-                if(memberList.isNotEmpty()){
-                    memberList.add(i)
-                    firestore.collection("groups").document(gctag).update("members",memberList,"membercount",memberList.size).addOnSuccessListener {
-                        memberAdapter.notifyDataSetChanged()
-                        if(requestList.isNotEmpty()){
-//                            Toast.makeText(this, requestList.toString(), Toast.LENGTH_SHORT).show()
-//                            requestAdapter.notifyRemove(requestList.indexOf(i))
-                            requestList.remove(i)
-                            firestore.collection("groups").document(gctag).update("requests",requestList).addOnSuccessListener {
-//                                for(j in requestModelList){
-//                                    if(j.id==i){
-//                                        requestModelList.remove(j)
-//                                        requestAdapter.setRequestList(requestModelList)
-//                                        requestAdapter.notifyDataSetChanged()
-//                                    }
-//                                }
-//                                requestAdapter.notifyDataSetChanged()
+            if(arrayList.isNotEmpty()){
+                for(i in arrayList){
+                    if(memberList.isNotEmpty()){
+                        memberList.add(i)
+                        requestList.remove(i)
+                        for(j in requestModelList){
+                            if(j.id == i){
+                                model = j
                             }
+                        }
+                        if(model.username!="" && model.id!="")  requestModelList.remove(model)
+                        firestore.collection("groups").document(gctag).update("members",memberList,"membercount",memberList.size,"requests",requestList).addOnSuccessListener {
+                            memberAdapter.notifyDataSetChanged()
+                            requestAdapter.notifyDataSetChanged()
                         }
                     }
                 }
@@ -446,16 +516,63 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
         memberAdapter = MembersAdapter(this,this,this,this,isAdmin)
         membersViewModel.getMembers(gctag)
         membersViewModel.liveData.observe(this){
-            memberAdapter.clearList()
-//            for(i in it){
-//                if(i.memberusername == sharedPreferences.getString("username","")){
-//                    currentUserMemberModel = i
-//                }
-//            }
-//            if(currentUserMemberModel.memberusername!="" && currentUserMemberModel.membername!=""){
-//                it.remove(currentUserMemberModel)
-//                it.add(0,currentUserMemberModel)
-//            }
+//            Log.d("memberss",it.toString())
+//            Log.d("memberss","membermodellist : $memberModeList")
+            if(memberModeList.sortBy {it.memberusername } == it.sortBy { it.memberusername } && memberModeList.isNotEmpty() && it.isNotEmpty()){
+                firestore.collection("groups").document(gctag).get().addOnSuccessListener {
+                    value ->
+                    if(value.get("members") != null && value.get("admins") !=""){
+                        var membername = ""
+                        var username= ""
+                        var uri = ""
+                        var isConnected = false
+                        val membersArrayList = ArrayList<MemberModel>()
+                        val adminlist = value.get("admins") as ArrayList<String>
+                        val memberlist =  value.get("members") as ArrayList<String>
+                        for(i in memberlist){
+                            firestore.collection("users").document(i).get().addOnSuccessListener {
+                                membername = it.getString("displayname").toString()
+                                username = it.getString("username").toString()
+                                uri = it.getString("imageurl").toString()
+                                firestore.collection("users").document(auth.currentUser!!.uid).collection("connections").document(i).get().addOnSuccessListener {
+                                        userdoc ->
+                                    isConnected = userdoc.exists()
+                                }.addOnFailureListener{isConnected = false}
+                                isMemberAdmin = adminlist.contains(i)
+                                val model = MemberModel(membername,username,uri,isConnected,isMemberAdmin,i)
+                                membersArrayList.add(model)
+                                val filteredList = membersArrayList.distinct()
+                                val filteredArrayList = ArrayList(filteredList)
+                                for(i in filteredArrayList){
+                                    if(i.memberusername == sharedPreferences.getString("username","")){
+                                        currentUserMemberModel = i
+                                    }
+                                }
+                                if(currentUserMemberModel.memberusername!="" && currentUserMemberModel.membername!=""){
+                                    filteredArrayList.remove(currentUserMemberModel)
+                                    filteredArrayList.add(0,currentUserMemberModel)
+                                }
+                                memberModeList.clear()
+                                memberModeList.addAll(filteredArrayList)
+                                memberAdapter.clearList()
+                                memberAdapter.setMembersList(filteredArrayList)
+                            }
+                        }
+                    }
+                }
+            }else{
+                memberAdapter.clearList()
+                for(i in it){
+                    if(i.memberusername == sharedPreferences.getString("username","")){
+                        currentUserMemberModel = i
+                    }
+                }
+                if(currentUserMemberModel.memberusername!="" && currentUserMemberModel.membername!=""){
+                    it.remove(currentUserMemberModel)
+                    it.add(0,currentUserMemberModel)
+                }
+                memberModeList.clear()
+                memberModeList.addAll(it)
 //            CoroutineScope(Default).launch {
 //                sortedMemberList.clear()
 //                sortedMemberList.addAll(getSortedMemberList(it))
@@ -465,9 +582,17 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
 //            }else{
 //                memberAdapter.setMembersList(it)
 //            }
-            memberAdapter.setMembersList(it)
-            memberRecyclerView.adapter = memberAdapter
+                memberAdapter.setMembersList(it)
+                memberRecyclerView.adapter = memberAdapter
+            }
         }
+    }
+
+    override fun onDestroy() {
+        membersViewModel.liveRequestList.removeObserver { lifecycle }
+        groupInfoViewModel.stopListening()
+        membersViewModel.stopListeningForGroupInfo()
+        super.onDestroy()
     }
 
     private suspend fun getSortedMemberList(it : ArrayList<MemberModel>):ArrayList<MemberModel>{
@@ -567,11 +692,9 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
                     firestore.collection("groups").document(gctag)
                         .update("members", memberList, "membercount", memberList.size,"admins",adminList)
                         .addOnSuccessListener {
-                            Toast.makeText(this, memberModeList.toString(), Toast.LENGTH_SHORT)
-                                .show()
-                            memberModeList.removeAt(position)
-                            memberAdapter.clearList()
-                            memberAdapter.setMembersList(memberModeList)
+//                            memberModeList.removeAt(position)
+//                            memberAdapter.clearList()
+//                            memberAdapter.setMembersList(memberModeList)
                             memberAdapter.notifyDataSetChanged()
 //                        memberAdapter.notifychange()
                             dialog.dismiss()
@@ -581,11 +704,9 @@ class Groupinfo : AppCompatActivity(), OnMemberClickListener,OnMenuClickListener
                     firestore.collection("groups").document(gctag)
                         .update("members", memberList, "membercount", memberList.size)
                         .addOnSuccessListener {
-                            Toast.makeText(this, memberModeList.toString(), Toast.LENGTH_SHORT)
-                                .show()
-                            memberModeList.removeAt(position)
-                            memberAdapter.clearList()
-                            memberAdapter.setMembersList(memberModeList)
+//                            memberModeList.removeAt(position)
+//                            memberAdapter.clearList()
+//                            memberAdapter.setMembersList(memberModeList)
                             memberAdapter.notifyDataSetChanged()
 //                        memberAdapter.notifychange()
                             dialog.dismiss()

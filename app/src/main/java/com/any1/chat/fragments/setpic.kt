@@ -27,12 +27,14 @@ import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContract
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.result.contract.ActivityResultContracts.*
+import androidx.appcompat.content.res.AppCompatResources
 import androidx.core.content.FileProvider
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import com.any1.chat.R
 import com.any1.chat.activities.MainActivity
 import com.any1.chat.viewmodels.AddAccountViewModel
+import com.any1.chat.viewmodels.GroupViewModel
 import com.bumptech.glide.Glide
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
@@ -114,7 +116,7 @@ class displaynamepic : Fragment() {
             val username = sharedPreferences!!.getString("username","")
             val name = sharedPreferences!!.getString("displayname","")
             val bm = (pfp.drawable as BitmapDrawable).bitmap
-            if(bitmap == bm && gender == "male"){
+            if( bitmap == bm && gender == "male"){
                 sharedPreferences!!.edit().putString("imgurl","male").apply()
             }else if(bitmap == bm && gender == "female") {
                 sharedPreferences!!.edit().putString("imgurl","female").apply()
@@ -122,12 +124,18 @@ class displaynamepic : Fragment() {
             val firestore = FirebaseFirestore.getInstance()
             val emailid = sharedPreferences!!.getString("email","")
             val documentReference: DocumentReference = firestore.collection("users").document(firebaseAuth.currentUser!!.uid)
+            var imgurl = ""
+            imgurl = if(sharedPreferences!!.getString("imgurl","")!=""){
+                sharedPreferences!!.getString("imgurl","").toString()
+            }else{
+                gender.toString()
+            }
             val hashMap = hashMapOf(
                 "displayname" to name,
                 "age" to age,
                 "birthdate" to birthdate,
                 "username" to username,
-                "imageurl" to sharedPreferences!!.getString("imgurl",""),
+                "imageurl" to imgurl,
                 "gender" to gender,
                 "email" to sharedPreferences!!.getString("email","")
             )
@@ -136,7 +144,7 @@ class displaynamepic : Fragment() {
                 "email" to emailid))
 
 
-            if(addAccountViewModel.add){
+            if(requireActivity().intent.getStringExtra("add")=="add"){
                 val sharedPreferences = requireContext().getSharedPreferences(requireContext().packageName+"addedaccounts", MODE_PRIVATE)
                 val editor = sharedPreferences.edit()
                 var numberofaddedaccounts = 0
@@ -146,7 +154,7 @@ class displaynamepic : Fragment() {
                 editor.putString("count",accountnumber.toString()).apply()
                 editor.putString("username$accountnumber",sp.getString("username",""))
                 editor.putString("email$accountnumber",sp.getString("email",""))
-                editor.putString("imgurl$accountnumber",sp.getString("imgurl",""))
+                editor.putString("imgurl$accountnumber",imgurl)
                 editor.putString("displayname$accountnumber",sp.getString("displayname",""))
                 editor.putString("age$accountnumber",sp.getString("age",""))
                 editor.putString("gender$accountnumber",sp.getString("gender",""))
@@ -158,15 +166,28 @@ class displaynamepic : Fragment() {
             val editor = userpreferences.edit()
             editor.putString("username",sharedPreferences!!.getString("username",""))
             editor.putString("email",sharedPreferences!!.getString("email",""))
-            editor.putString("imgurl",sharedPreferences!!.getString("imgurl",""))
+            editor.putString("imgurl",imgurl)
             editor.putString("displayname",sharedPreferences!!.getString("displayname",""))
             editor.putString("age",sharedPreferences!!.getString("age",""))
             editor.putString("gender",sharedPreferences!!.getString("gender",""))
             editor.putString("password",sharedPreferences!!.getString("password",""))
             editor.apply()
+
             documentReference.set(hashMap).addOnSuccessListener {
                 sharedPreferences!!.edit().clear().apply()
-                startActivity(Intent(requireActivity(), MainActivity::class.java).setFlags (Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION))
+                val auth = FirebaseAuth.getInstance()
+                if(requireActivity().intent.getStringExtra("add")=="add") {
+                    val viewModel = ViewModelProvider(this).get(GroupViewModel::class.java)
+                    viewModel.updateAuthId(auth.currentUser!!.uid)
+                    startActivity(
+                        Intent(
+                            requireActivity(),
+                            MainActivity::class.java
+                        )
+                    )
+                }else{
+                    startActivity(Intent(requireActivity(), MainActivity::class.java).setFlags (Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_NO_ANIMATION))
+                }
                 shp.edit().putString("login","true").apply()
                 requireActivity().finish()
             }
@@ -215,7 +236,7 @@ class displaynamepic : Fragment() {
             pleasewait.text = "Setting Your Pfp"
             dialog.show()
             if(result!=null){
-                Glide.with(requireContext()).load(result).into(pfp)
+                Glide.with(requireContext()).load(result).circleCrop().into(pfp)
                 uploadToFirebase(result)
             }
             dialog.dismiss()

@@ -79,11 +79,7 @@ class SearchRepository {
                     membercount = document.get("membercount") as Long
                     grouptag = document.id
                     memberList = document.get("members") as ArrayList<String>
-                    if(isApprovalRequired){
-                        if(document.get("requests")!=null){
-                            requestList = document.get("requests") as ArrayList<String>
-                        }
-                    }
+                    requestList = document.get("requests") as ArrayList<String>
                     for(i in memberList) {
                         firestore.collection("users").document(auth.currentUser!!.uid)
                             .collection("connections").document(i).get().addOnSuccessListener {

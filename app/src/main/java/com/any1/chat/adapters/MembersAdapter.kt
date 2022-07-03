@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Context.MODE_PRIVATE
 import android.graphics.Color
 import android.graphics.drawable.ColorDrawable
+import android.util.Log
 import android.view.*
 import android.widget.ImageView
 import android.widget.TextView
@@ -59,6 +60,7 @@ class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberC
 
     fun setMembersList(arrayList: ArrayList<MemberModel>){
         membersArrayList.addAll(arrayList)
+        notifyDataSetChanged()
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): MessageHolder {
@@ -77,6 +79,7 @@ class MembersAdapter(val context : Context, val onMemberClickListener: OnMemberC
     }
 
     override fun onBindViewHolder(holder: MessageHolder, position: Int) {
+        Log.d("notified","notified")
         holder.membername.text = membersArrayList[position].membername
         holder.memberusername.text = membersArrayList[position].memberusername
         if(membersArrayList[position].connected){

@@ -16,9 +16,12 @@ import android.view.animation.Animation
 import android.view.animation.TranslateAnimation
 import android.widget.ImageView
 import androidx.activity.OnBackPressedCallback
+import androidx.core.view.ViewCompat
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.ViewModelProvider
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.viewpager.widget.ViewPager
 import androidx.viewpager2.widget.ViewPager2
 import com.any1.chat.MyCustomAnimation
 import com.any1.chat.R
@@ -30,6 +33,7 @@ import com.any1.chat.interfaces.OnGroupClickListener
 import com.any1.chat.models.GroupModel
 import com.any1.chat.randomfiles.CustomRecycleriew
 import com.any1.chat.viewmodels.GroupViewModel
+import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.fragment_home.view.*
 
 
@@ -46,7 +50,7 @@ class home : Fragment(),OnGroupClickListener{
     private var param1: String? = null
     private var param2: String? = null
     private lateinit var adapter: GroupAdapter
-    private lateinit var recyclerView: CustomRecycleriew
+    private lateinit var recyclerView: RecyclerView
     private lateinit var viewModel: GroupViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

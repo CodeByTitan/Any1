@@ -1,8 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:id="@+id/homefrag"
+    android:nestedScrollingEnabled="true"
     android:background="@color/app_background"
     android:layout_height="match_parent"
     app:layout_constraintTop_toTopOf="@+id/toolbar"
@@ -12,6 +13,7 @@
 
    <androidx.constraintlayout.widget.ConstraintLayout
        android:layout_width="match_parent"
+       android:id="@+id/cnt"
        android:layout_height="wrap_content">
 
        <com.google.android.material.card.MaterialCardView
@@ -119,16 +121,22 @@
                </RelativeLayout>
        </androidx.appcompat.widget.Toolbar>
 
-
-       <com.any1.chat.randomfiles.CustomRecycleriew
-           android:layout_width="match_parent"
-           app:layout_constraintTop_toBottomOf="@+id/toolbar"
-           android:layout_height="wrap_content"
-           android:id="@+id/gcrecyclerview"
-           app:layout_constraintEnd_toEndOf="parent"
-           app:layout_constraintStart_toStartOf="parent"
-           android:layout_marginTop="25dp" />
    </androidx.constraintlayout.widget.ConstraintLayout>
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_below="@+id/cnt"
+        android:layout_marginBottom="30dp"
+        android:layout_height="wrap_content">
+        <androidx.recyclerview.widget.RecyclerView
+            android:layout_width="match_parent"
+            app:layout_constraintTop_toBottomOf="@+id/toolbar"
+            android:layout_height="wrap_content"
+            android:id="@+id/gcrecyclerview"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            android:layout_marginTop="25dp" />
+
+    </ScrollView>
 <!--    <androidx.appcompat.widget.SwitchCompat-->
 <!--        android:id="@+id/changetheme"-->
 <!--        android:layout_width="match_parent"-->
@@ -162,4 +170,4 @@
 <!--        android:layout_width="300dp"-->
 <!--        android:layout_height="60dp"/>-->
 
-</ScrollView>
+</RelativeLayout>

@@ -13,8 +13,8 @@ import com.any1.chat.repository.MembersRepository
 class MembersViewModel : ViewModel(), MemberListListener, RequestListListener, TagListListener{
     private val mutableLiveData = MutableLiveData<ArrayList<MemberModel>>()
     val liveData : LiveData<ArrayList<MemberModel>> = mutableLiveData
-    private val requestList = MutableLiveData<ArrayList<RequestModel>>()
-    val liveRequestList : LiveData<ArrayList<RequestModel>> = requestList
+    private val requestList = MutableLiveData<List<RequestModel>>()
+    val liveRequestList : LiveData<List<RequestModel>> = requestList
     private val mutableTagsList = MutableLiveData<ArrayList<String>>()
     val liveTagsList : LiveData<ArrayList<String>> = mutableTagsList
     private val membersRepository = MembersRepository(this,this,this)
@@ -27,6 +27,10 @@ class MembersViewModel : ViewModel(), MemberListListener, RequestListListener, T
         membersRepository.getRequests(string)
     }
 
+    fun stopListeningForGroupInfo(){
+        membersRepository.removeListener()
+    }
+
     fun getTags(string: String){
         membersRepository.getGroupTags(string)
     }
@@ -35,7 +39,7 @@ class MembersViewModel : ViewModel(), MemberListListener, RequestListListener, T
         mutableLiveData.postValue(arrayList)
     }
 
-    override fun showRequestList(arrayList: ArrayList<RequestModel>) {
+    override fun showRequestList(arrayList: List<RequestModel>?) {
        requestList.postValue(arrayList)
     }
 

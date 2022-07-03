@@ -144,10 +144,10 @@ class Emailverification : Fragment(){
         return view
     }
 
-    override fun onPause() {
+    override fun onDestroy() {
         handler.removeCallbacks(runnable)
         verifiedViewModel.liveIsVerified.removeObservers {lifecycle}
-        super.onPause()
+        super.onDestroy()
     }
 
     private fun checkforverfiication(){
@@ -166,34 +166,44 @@ class Emailverification : Fragment(){
     }
 
     override fun onResume() {
-        val dialog = Dialog(requireContext())
-        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
-        dialog.setContentView(R.layout.progressbardialog)
-        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
-        dialog.findViewById<TextView>(R.id.pleasewait).text = "Checking Verification"
-        handler = Handler(Looper.getMainLooper())
-        handler.postDelayed({
-            runnable = Runnable {
-                verifiedViewModel.checkEmailVerification()
-                verifiedViewModel.liveIsVerified.observe(viewLifecycleOwner){
-                    if(it) {
-                        dialog.dismiss()
-                        val navController =
-                            requireActivity().findNavController(R.id.fragmentContainerView2)
-                        navController.navigate(R.id.setname)
-                        bool = false
-                        openmail.text = "Continue"
-                    }else{
-                        dialog.dismiss()
-                    }
-                }
-                handler.postDelayed(runnable,1000)
-            }
-            runnable.run()
-        },1000)
+//        val dialog = Dialog(requireContext())
+//        dialog.requestWindowFeature(Window.FEATURE_NO_TITLE)
+//        dialog.setContentView(R.layout.progressbardialog)
+//        dialog.window!!.setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
+//        dialog.findViewById<TextView>(R.id.pleasewait).text = "Checking Verification"
 //        val auth = FirebaseAuth.getInstance()
 //        val user = auth.currentUser
 //        user!!.reload()
+//        if(user.isEmailVerified){
+//            dialog.dismiss()
+//            val navController = requireActivity().findNavController(R.id.fragmentContainerView2)
+//            navController.navigate(R.id.setname)
+//            bool = false
+//            openmail.text = "Continue"
+//        }else{
+//            dialog.dismiss()
+//        }
+//        handler = Handler(Looper.getMainLooper())
+//        handler.postDelayed({
+//            runnable = Runnable {
+//                verifiedViewModel.checkEmailVerification()
+//                verifiedViewModel.liveIsVerified.observe(viewLifecycleOwner){
+//                    if(it) {
+//                        dialog.dismiss()
+//                        val navController =
+//                            requireActivity().findNavController(R.id.fragmentContainerView2)
+//                        navController.navigate(R.id.setname)
+//                        bool = false
+//                        openmail.text = "Continue"
+//                    }else{
+//                        dialog.dismiss()
+//                    }
+//                }
+//                handler.postDelayed(runnable,1000)
+//            }
+//            runnable.run()
+//        },1000)
+//        dialog.show()
         super.onResume()
 //        if(bool){
 //            checkforverfiication()

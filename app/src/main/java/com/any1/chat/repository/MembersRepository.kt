@@ -1,8 +1,5 @@
 package com.any1.chat.repository
 
-import android.net.Uri
-import androidx.core.net.toUri
-import com.any1.chat.interfaces.GroupListListener
 import com.any1.chat.interfaces.MemberListListener
 import com.any1.chat.interfaces.RequestListListener
 import com.any1.chat.interfaces.TagListListener
@@ -10,7 +7,11 @@ import com.any1.chat.models.MemberModel
 import com.any1.chat.models.RequestModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
-import java.lang.reflect.Member
+import com.google.firebase.firestore.ListenerRegistration
+import kotlinx.coroutines.*
+import kotlinx.coroutines.Dispatchers.Default
+import kotlinx.coroutines.Dispatchers.IO
+import kotlinx.coroutines.Dispatchers.Main
 
 class MembersRepository(val memberListListener : MemberListListener, val requestListListener: RequestListListener, val tagListListener: TagListListener) {
     private val auth = FirebaseAuth.getInstance()
@@ -18,7 +19,11 @@ class MembersRepository(val memberListListener : MemberListListener, val request
     private var membersList = ArrayList<String>()
     private var adminList = ArrayList<String>()
     private val firestore = FirebaseFirestore.getInstance()
+    private var finalRequestList : List<RequestModel> ?= null
     private var isAdmin = false
+    var listener: ListenerRegistration? = null
+    var taglistener: ListenerRegistration? = null
+    var memberlistener: ListenerRegistration? = null
     private var isConnected = false
     private lateinit var membername : String
     private lateinit var username : String
@@ -26,8 +31,9 @@ class MembersRepository(val memberListListener : MemberListListener, val request
     private var tagList = ArrayList<String>()
     private lateinit var model : MemberModel
     private var requestList = ArrayList<RequestModel>()
+    private var requestList2 = ArrayList<RequestModel>()
     fun getMemberData(tag : String){
-        firestore.collection("groups").document(tag).addSnapshotListener{
+        memberlistener = firestore.collection("groups").document(tag).addSnapshotListener{
             value,error->
             if (value != null) {
                 membersArrayList.clear()
@@ -58,7 +64,7 @@ class MembersRepository(val memberListListener : MemberListListener, val request
     }
 
     fun getGroupTags(tag: String){
-        firestore.collection("groups").document(tag).addSnapshotListener{
+        taglistener = firestore.collection("groups").document(tag).addSnapshotListener{
             value, error ->
             if(value!=null){
                 tagList.clear()
@@ -70,25 +76,83 @@ class MembersRepository(val memberListListener : MemberListListener, val request
         }
     }
 
+    fun removeListener(){
+        listener?.remove()
+        taglistener?.remove()
+        memberlistener?.remove()
+    }
     fun getRequests(tag : String){
-        firestore.collection("groups").document(tag).addSnapshotListener {
+        listener = firestore.collection("groups").document(tag).addSnapshotListener {
             document, error ->
+            requestList.clear()
             if(document!=null) {
+                requestList.clear()
+                requestList2.clear()
                 if(document.get("requests")!=null) {
                     requestList.clear()
-                    for (id in document.get("requests") as ArrayList<String>) {
-                        firestore.collection("users").document(id).get()
-                            .addOnSuccessListener { doc ->
-                                val name = doc.getString("displayname").toString()
-                                val username = doc.getString("username").toString()
-                                val uri = doc.getString("imageurl").toString()
-                                val model = RequestModel(name, username, uri, true, id)
-                                requestList.add(model)
-                                requestListListener.showRequestList(requestList)
+                    val tempReqList = document.get("requests") as ArrayList<String>
+                    if(tempReqList.size!=0){
+                        CoroutineScope(Main).launch{
+                            for (id in tempReqList) {
+                                firestore.collection("users").document(id).get().addOnSuccessListener { doc ->
+                                        val name = doc.getString("displayname").toString()
+                                        val username = doc.getString("username").toString()
+                                        val uri = doc.getString("imageurl").toString()
+                                        val model = RequestModel(name, username, uri, false, id)
+                                        requestList.add(model)
+                                        finalRequestList = requestList.distinct()
+                                    if(finalRequestList!=null) requestListListener.showRequestList(finalRequestList)
+                                }
                             }
+//                            job1.join()
+                        }
+
+                        if(finalRequestList!=null) {
+                            requestListListener.showRequestList(
+                            finalRequestList!!
+                        )}
+                    }else{
+                        requestList.clear()
+                        requestListListener.showRequestList(requestList)
                     }
+                }else{
+                    requestList.clear()
+                    requestListListener.showRequestList(requestList)
                 }
             }
         }
     }
+
+//    private suspend fun getRequestInformation(tempReqList : ArrayList<String>) : List<RequestModel>?{
+//        coroutineScope {
+//            for (id in tempReqList) {
+//                firestore.collection("users").document(id).get()
+//                    .addOnSuccessListener { doc ->
+//                        val name = doc.getString("displayname").toString()
+//                        val username = doc.getString("username").toString()
+//                        val uri = doc.getString("imageurl").toString()
+//                        val model = RequestModel(name, username, uri, false, id)
+//                        requestList.add(model)
+//                        finalRequestList = requestList.distinct()
+////                                    requestListListener.showRequestList(finalRequestList)
+//                    }
+//            }
+//        }
+//    }
 }
+
+
+//                            val list = async { getRequestInformation(tempReqList) }
+//                            requestListListener.showRequestList(requestList2)
+//                            for (id in tempReqList) {
+//                                firestore.collection("users").document(id).get()
+//                                    .addOnSuccessListener { doc ->
+//                                        val name = doc.getString("displayname").toString()
+//                                        val username = doc.getString("username").toString()
+//                                        val uri = doc.getString("imageurl").toString()
+//                                        val model = RequestModel(name, username, uri, false, id)
+//                                        requestList.add(model)
+//                                        finalRequestList = requestList.distinct()
+////                                    requestListListener.showRequestList(finalRequestList)
+//                                    }
+//                            }
